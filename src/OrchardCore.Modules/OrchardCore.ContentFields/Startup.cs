@@ -92,6 +92,8 @@ public sealed class Startup : StartupBase
             .AddHandler<MultiTextFieldHandler>();
 
         services.AddScoped<IContentPartFieldDefinitionDisplayDriver, MultiTextFieldSettingsDriver>();
+        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, MultiTextFieldPredefinedListEditorSettingsDriver>();
+        services.AddScoped<IContentPartFieldDefinitionDisplayDriver, MultiTextFieldEditableListEditorSettingsDriver>();
         services.AddScoped<IContentFieldIndexHandler, MultiTextFieldIndexHandler>();
 
         // Numeric Field

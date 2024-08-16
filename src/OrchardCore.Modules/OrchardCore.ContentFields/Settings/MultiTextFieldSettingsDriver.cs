@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Localization;
 using OrchardCore.ContentFields.Fields;
@@ -28,7 +27,8 @@ public sealed class MultiTextFieldSettingsDriver : ContentPartFieldDefinitionDis
             model.Required = settings.Required;
             model.Hint = settings.Hint;
             model.Options = JConvert.SerializeObject(settings.Options, JOptions.Indented);
-        }).Location("Content");
+        })
+        .Location("Content");
     }
 
     public override async Task<IDisplayResult> UpdateAsync(ContentPartFieldDefinition partFieldDefinition, UpdatePartFieldEditorContext context)

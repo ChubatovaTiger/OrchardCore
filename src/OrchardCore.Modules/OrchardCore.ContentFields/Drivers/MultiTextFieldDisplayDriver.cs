@@ -25,9 +25,18 @@ public sealed class MultiTextFieldDisplayDriver : ContentFieldDisplayDriver<Mult
     {
         return Initialize<DisplayMultiTextFieldViewModel>(GetDisplayShapeType(context), model =>
         {
-            var settings = context.PartFieldDefinition.GetSettings<MultiTextFieldSettings>();
+            if (context.PartFieldDefinition.Editor() == "EditableList")
+            {
+                model.Values = field.Values;
+            }
+            else
+            {
+                var settings = context.PartFieldDefinition.GetSettings<MultiTextFieldSettings>();
+                var editorSettings = context.PartFieldDefinition.GetSettings<MultiTextFieldPredefinedListEditorSettings>();
 
-            model.Values = settings.Options.Where(o => field.Values?.Contains(o.Value) == true).Select(o => o.Value).ToArray();
+                model.Values = editorSettings.Options.Where(o => field.Values?.Contains(o.Value) == true).Select(o => o.Value).ToArray();
+            }
+
             model.Field = field;
             model.Part = context.ContentPart;
             model.PartFieldDefinition = context.PartFieldDefinition;
@@ -42,8 +51,16 @@ public sealed class MultiTextFieldDisplayDriver : ContentFieldDisplayDriver<Mult
         {
             if (context.IsNew)
             {
-                var settings = context.PartFieldDefinition.GetSettings<MultiTextFieldSettings>();
-                model.Values = settings.Options.Where(o => o.Default).Select(o => o.Value).ToArray();
+                if (context.PartFieldDefinition.Editor() == "EditableList")
+                {
+                    var settings = context.PartFieldDefinition.GetSettings<MultiTextFieldEditableListEditorSettings>();
+                    model.Values = settings.Items;
+                }
+                else
+                {
+                    var settings = context.PartFieldDefinition.GetSettings<MultiTextFieldPredefinedListEditorSettings>();
+                    model.Values = settings.Options.Where(o => o.Default).Select(o => o.Value).ToArray();
+                }
             }
             else
             {
