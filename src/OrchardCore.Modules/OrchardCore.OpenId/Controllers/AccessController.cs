@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Primitives;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using OrchardCore.Environment.Shell;
@@ -155,9 +156,15 @@ public sealed class AccessController : Controller
 
             string GetRedirectUrl()
             {
-                // Override the prompt parameter to prevent infinite authentication/authorization loops.
-                var parameters = Request.Query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                parameters[Parameters.Prompt] = "continue";
+                // To avoid endless login -> authorization redirects, the prompt=login flag
+                // is removed from the authorization request payload before redirecting the user.
+                var prompt = string.Join(" ", request.GetPromptValues().Remove(PromptValues.Login));
+
+                var parameters = Request.HasFormContentType ?
+                    Request.Form.Where(parameter => parameter.Key != Parameters.Prompt).ToList() :
+                    Request.Query.Where(parameter => parameter.Key != Parameters.Prompt).ToList();
+
+                parameters.Add(new(Parameters.Prompt, new StringValues(prompt)));
 
                 return Request.PathBase + Request.Path + QueryString.Create(parameters);
             }
