@@ -376,8 +376,41 @@ public class OpenIdTokenStore<TToken> : IOpenIdTokenStore<TToken>
     }
 
     /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeByApplicationIdAsync(string identifier, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+
+        // Note: YesSql doesn't support set-based updates, which prevents updating entities
+        // in a single command without having to retrieve and materialize them first.
+        // To work around this limitation, entities are manually listed and updated.
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var tokens = (await _session.Query<TToken, OpenIdTokenIndex>(
+            token => token.ApplicationId == identifier, collection: OpenIdCollection).ListAsync()).ToList();
+
+        if (tokens.Count is 0)
+        {
+            return 0;
+        }
+
+        foreach (var token in tokens)
+        {
+            token.Status = Statuses.Revoked;
+
+            await _session.SaveAsync(token, checkConcurrency: false, collection: OpenIdCollection);
+        }
+
+        await _session.SaveChangesAsync();
+
+        return tokens.Count;
+    }
+
+    /// <inheritdoc/>
     public virtual async ValueTask<long> RevokeByAuthorizationIdAsync(string identifier, CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+
         // Note: YesSql doesn't support set-based updates, which prevents updating entities
         // in a single command without having to retrieve and materialize them first.
         // To work around this limitation, entities are manually listed and updated.
@@ -386,6 +419,36 @@ public class OpenIdTokenStore<TToken> : IOpenIdTokenStore<TToken>
 
         var tokens = (await _session.Query<TToken, OpenIdTokenIndex>(
             token => token.AuthorizationId == identifier, collection: OpenIdCollection).ListAsync()).ToList();
+
+        if (tokens.Count is 0)
+        {
+            return 0;
+        }
+
+        foreach (var token in tokens)
+        {
+            token.Status = Statuses.Revoked;
+
+            await _session.SaveAsync(token, checkConcurrency: false, collection: OpenIdCollection);
+        }
+
+        await _session.SaveChangesAsync();
+
+        return tokens.Count;
+    }
+
+    public virtual async ValueTask<long> RevokeBySubjectAsync(string subject, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(subject);
+
+        // Note: YesSql doesn't support set-based updates, which prevents updating entities
+        // in a single command without having to retrieve and materialize them first.
+        // To work around this limitation, entities are manually listed and updated.
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var tokens = (await _session.Query<TToken, OpenIdTokenIndex>(
+            token => token.Subject == subject, collection: OpenIdCollection).ListAsync()).ToList();
 
         if (tokens.Count is 0)
         {

@@ -64,7 +64,7 @@ public sealed class AccessController : Controller
         // Retrieve the claims stored in the authentication cookie.
         // If they can't be extracted, redirect the user to the login page.
         var result = await HttpContext.AuthenticateAsync();
-        if (result == null || !result.Succeeded || request.HasPrompt(Prompts.Login))
+        if (result == null || !result.Succeeded || request.HasPromptValue(PromptValues.Login))
         {
             return RedirectToLoginPage(request);
         }
@@ -99,7 +99,7 @@ public sealed class AccessController : Controller
 
             case ConsentTypes.Implicit:
             case ConsentTypes.External when authorizations.Count > 0:
-            case ConsentTypes.Explicit when authorizations.Count > 0 && !request.HasPrompt(Prompts.Consent):
+            case ConsentTypes.Explicit when authorizations.Count > 0 && !request.HasPromptValue(PromptValues.Consent):
                 var identity = new ClaimsIdentity(result.Principal.Claims, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
                 identity.AddClaim(new Claim(OpenIdConstants.Claims.EntityType, OpenIdConstants.EntityTypes.User));
 
@@ -123,7 +123,7 @@ public sealed class AccessController : Controller
 
                 return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
-            case ConsentTypes.Explicit when request.HasPrompt(Prompts.None):
+            case ConsentTypes.Explicit when request.HasPromptValue(PromptValues.None):
                 return Forbid(new AuthenticationProperties(new Dictionary<string, string>
                 {
                     [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.ConsentRequired,
@@ -144,7 +144,7 @@ public sealed class AccessController : Controller
         {
             // If the client application requested promptless authentication,
             // return an error indicating that the user is not logged in.
-            if (request.HasPrompt(Prompts.None))
+            if (request.HasPromptValue(PromptValues.None))
             {
                 return Forbid(new AuthenticationProperties(new Dictionary<string, string>
                 {

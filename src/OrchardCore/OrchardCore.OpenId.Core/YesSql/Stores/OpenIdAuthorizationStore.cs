@@ -10,6 +10,7 @@ using OrchardCore.OpenId.YesSql.Indexes;
 using OrchardCore.OpenId.YesSql.Models;
 using YesSql;
 using YesSql.Services;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace OrchardCore.OpenId.YesSql.Stores;
 
@@ -338,6 +339,68 @@ public class OpenIdAuthorizationStore<TAuthorization> : IOpenIdAuthorizationStor
         }
 
         return result;
+    }
+
+    /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeByApplicationIdAsync(string identifier, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(identifier);
+
+        // Note: YesSql doesn't support set-based updates, which prevents updating entities
+        // in a single command without having to retrieve and materialize them first.
+        // To work around this limitation, entities are manually listed and updated.
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var authorizations = (await _session.Query<TAuthorization, OpenIdAuthorizationIndex>(
+            token => token.ApplicationId == identifier, collection: OpenIdCollection).ListAsync()).ToList();
+
+        if (authorizations.Count is 0)
+        {
+            return 0;
+        }
+
+        foreach (var token in authorizations)
+        {
+            token.Status = Statuses.Revoked;
+
+            await _session.SaveAsync(token, checkConcurrency: false, collection: OpenIdCollection);
+        }
+
+        await _session.SaveChangesAsync();
+
+        return authorizations.Count;
+    }
+
+    /// <inheritdoc/>
+    public virtual async ValueTask<long> RevokeBySubjectAsync(string subject, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(subject);
+
+        // Note: YesSql doesn't support set-based updates, which prevents updating entities
+        // in a single command without having to retrieve and materialize them first.
+        // To work around this limitation, entities are manually listed and updated.
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var authorizations = (await _session.Query<TAuthorization, OpenIdAuthorizationIndex>(
+            token => token.Subject == subject, collection: OpenIdCollection).ListAsync()).ToList();
+
+        if (authorizations.Count is 0)
+        {
+            return 0;
+        }
+
+        foreach (var token in authorizations)
+        {
+            token.Status = Statuses.Revoked;
+
+            await _session.SaveAsync(token, checkConcurrency: false, collection: OpenIdCollection);
+        }
+
+        await _session.SaveChangesAsync();
+
+        return authorizations.Count;
     }
 
     /// <inheritdoc/>
