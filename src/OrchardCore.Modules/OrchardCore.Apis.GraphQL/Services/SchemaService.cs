@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using GraphQL;
 using GraphQL.MicrosoftDI;
 using GraphQL.Types;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,21 +62,23 @@ public class SchemaService : ISchemaFactory
 
             var schema = new Schema(new SelfActivatingServiceProvider(_serviceProvider))
             {
-                Query = new ObjectGraphType { Name = "Query" },
-                Mutation = new ObjectGraphType { Name = "Mutation" },
-                Subscription = new ObjectGraphType { Name = "Subscription" },
+                Query = new ObjectGraphType
+                {
+                    Name = "Query",
+                },
+                Mutation = new ObjectGraphType
+                {
+                    Name = "Mutation",
+                },
+                Subscription = new ObjectGraphType
+                {
+                    Name = "Subscription",
+                },
                 NameConverter = new OrchardFieldNameConverter(),
             };
 
-            foreach (var type in serviceProvider.GetServices<IInputObjectGraphType>())
-            {
-                schema.RegisterType(type);
-            }
-
-            foreach (var type in serviceProvider.GetServices<IObjectGraphType>())
-            {
-                schema.RegisterType(type);
-            }
+            schema.RegisterTypes(serviceProvider.GetServices<IInputObjectGraphType>().ToArray());
+            schema.RegisterTypes(serviceProvider.GetServices<IObjectGraphType>().ToArray());
 
             foreach (var builder in _schemaBuilders)
             {
@@ -90,27 +93,32 @@ public class SchemaService : ISchemaFactory
                 await builder.BuildAsync(schema);
             }
 
-
             // Clean Query, Mutation and Subscription if they have no fields
             // to prevent GraphQL configuration errors.
 
-            if (schema.Query.Fields.Count == 0)
+            if (schema.Query?.Fields != null && schema.Query.Fields.Count == 0)
             {
                 schema.Query = null;
             }
 
-            if (schema.Mutation.Fields.Count == 0)
+            if (schema.Mutation?.Fields != null && schema.Mutation.Fields.Count == 0)
             {
                 schema.Mutation = null;
             }
 
-            if (schema.Subscription.Fields.Count == 0)
+            if (schema.Subscription?.Fields != null && schema.Subscription.Fields.Count == 0)
             {
                 schema.Subscription = null;
             }
 
             schema.Initialize();
+
             return _schema = schema;
+        }
+        catch (Exception e)
+        {
+            var t = e;
+            throw;
         }
         finally
         {
