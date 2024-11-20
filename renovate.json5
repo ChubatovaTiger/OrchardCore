@@ -1,0 +1,26 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended"
+    ],
+    // See https://docs.renovatebot.com/configuration-options/#configmigration.
+    "configMigration": true,
+    "packageRules": [
+        {
+            "matchPackageNames": [
+                // We'll update GraphQL for v3 because it's breaking, see https://github.com/OrchardCMS/OrchardCore/issues/16826.
+                "GraphQL*",
+                // See the corresponding comment in Directory.Packages.props.
+                "System.Drawing.Common"
+            ],
+            "enabled": false
+        },
+        {
+            // See https://github.com/OrchardCMS/OrchardCore/issues/16318 on why we have NPM updates disabled.
+            "managers": [ "npm" ],
+            "enabled": false
+        }
+    ],
+    // We only need updates once a week.
+    "schedule": [ "before 5am on Sunday" ]
+}
