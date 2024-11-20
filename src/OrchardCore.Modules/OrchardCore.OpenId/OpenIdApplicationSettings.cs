@@ -57,11 +57,11 @@ internal static class OpenIdApplicationExtensions
 
         if (model.AllowLogoutEndpoint)
         {
-            descriptor.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.Logout);
+            descriptor.Permissions.Add(OpenIddictConstants.Permissions.Endpoints.EndSession);
         }
         else
         {
-            descriptor.Permissions.Remove(OpenIddictConstants.Permissions.Endpoints.Logout);
+            descriptor.Permissions.Remove(OpenIddictConstants.Permissions.Endpoints.EndSession);
         }
 
         if (model.AllowAuthorizationCodeFlow || model.AllowHybridFlow)
