@@ -52,6 +52,7 @@ public sealed class LocalizationSetContentPickerFieldDisplayDriver : ContentFiel
             model.Field = field;
             model.Part = context.ContentPart;
             model.PartFieldDefinition = context.PartFieldDefinition;
+            model.IsNew = context.IsNew;
 
             model.SelectedItems = [];
 

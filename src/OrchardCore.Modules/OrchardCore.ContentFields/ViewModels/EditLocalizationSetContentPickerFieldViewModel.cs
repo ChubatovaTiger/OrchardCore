@@ -14,4 +14,7 @@ public class EditLocalizationSetContentPickerFieldViewModel
 
     [BindNever]
     public IList<VueMultiselectItemViewModel> SelectedItems { get; set; }
+
+    [BindNever]
+    public bool IsNew { get; set; }
 }
